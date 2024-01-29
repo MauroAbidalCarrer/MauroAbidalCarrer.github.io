@@ -20,7 +20,340 @@
         </nav>
     </header>
     <div class="container">
-        <!-- Game Development content goes here -->
+		<section>
+			<p>
+			Hi, my name is Mauro, I study computer science at <a href="https://42.fr/en/homepage/" target="_blank">42school</a>, Paris.<br>
+			I started programming 4 years ago to make games and <a href="#robot" style="scroll-behavior: smooth;">robots</a>.<br>
+			email: <a href="mailto:mauroabidal@yahoo.fr">mauroabidal@yahoo.fr</a><br>
+			discord: Kantic#8329
+			</p>
+		</section>
+		<section id="equilibre">
+			<h2>Game jam</h2>
+			<article>
+				<p>
+					<img id="gp_equilibre" src="ressources/equilibre-gameplay.gif" alt="equilibre-gameplay">
+					In March of this year, I participated in a gameJam
+					organised by <a href="https://vivatechnology.com/" target="_blank">Vivatech</a>,
+					<a href="https://42.fr/en/homepage/" target="_blank">42school</a>
+					and <a href="https://www.gobelins.fr" target="_blank">the Gobelins</a>.<br>
+					At the beginning of the event, I joined a team and we developped <i><strong>Équilibre</strong></i> ("Balance" in english).<br>
+					It's a city builder where you have to develop your civilization, while keeping a <i>balance</i> between nature's intergity and human growth.<br>
+					<span style="color:rgb(255, 89, 89)">To make clarify</span>, this is not the game we made in two days.<br>
+					This is the "V2" of the project since we got selected by the jury to present the game at this year's Vivatech event.<br>
+					<button><a href="https://paulblot.itch.io/equilibre" style="text-decoration: none;color: rgb(255, 120, 9);" target="_blank">Play the game</a></button><br>
+				</p>
+				<br>
+				<p style="padding-top: 20px;">
+					<img id="dissolve" src="ressources/dissolveShader.gif" alt="dissolve-effect">
+					Beside the usual gamplay implementation,<br> I worked on two shaders.<br>
+					One to tell the player that a building can't be built on top of a tile and a dissolve effect.<br>
+					I know this isn't THE most complex shader ever but it's still cool to look at!<br>
+				</p>
+			</article>
+		</section>
+		<section>
+			<h2>RTS inspired by StarCraft2</h2>
+			<p>
+				During the month of september 2021, I attempted to make an SC2 clone.<br>
+				An RTS like SC2 requiers a wide variety of functionalities: units behaviours, fog of war, multiplayer, UI, spells implementation.<br>
+				While I had bitten off more than I could chew and didn't get to finish the project, I did learn to make some interesting functionalities.<br>
+			</p>
+			<article>
+				<h3>Units behaviours</h3>
+				<p>
+					The first functionality to implement, is unit movement.<br>
+					While the NavMesh Agent Component is very handy, let's say that agents have a tendency to act a little bit... drunk.🍺<br>
+					For example, if you simply command a group of agents to go to a certain destination,<br>
+					they will all try to get <strong><i>precisely</i></strong> to that destination and end up spining around it like shown in the first gif.<br>
+					To fix this, i created a empty list of agents. Whenever an agent arrives at the destination, they get added to the list.<br>
+					When an agent touches a peer from that list, it stops and gets added to the list thus, preventing the group from spinning.<br>
+					<img id="spinGlitch" src="ressources/spiningGlitch.gif" alt="spinGlitch">
+					<img id="spinGlitch" src="ressources/newGroupMove.gif" alt="fix">
+				</p>
+			</article>
+			<article>
+				<h3>State machines🤖</h3>
+				<p>
+					In order to have entities(units, and buildings) that can execute all sorts of tasks, every entity inherits from a state machine.<br>
+					It's main properties are:<br>
+				</p>
+					<dl>
+						<dt>An Action that defines the current task of the unit is(mining, atticking, ...)</dt>
+							<dd>This Action gets called on Update and could be considered as the current state of the machine.</dd>
+						<dt>A target and a destination.</dt>
+							<dd>The target is another entity(unit/building/ressource) and destination is just a Vector3, they are used by the CurrentTask.</dd>
+						<dt>A list of tasks to come once the current one is finished.</dt>
+							<dd>
+								The list actually contains structures which in turn, contain an Action that will prepare and then apply, the change of state.<br>
+								But also the target and the destination for the task.
+							</dd>
+						<dt>A Predicate that tells wether the task is done, if it is, the unit fetchs the next task from the list.</dt>
+							<dd>
+								This is also part of the state of the machine and gets called just before the current Action.<br>
+								If the list is empty, the machine returns to a predefined state.
+							</dd>
+						<dt>An abstract action to react from the player's orders.</dt>
+							<dd>Basically, when the player right clicks on a unit or a location.</dd>
+					</dl>
+				<p>The pseudo code would look something like this:<br></p>
+				<div class="code-box">
+					<pre>
+							<code id="code">
+Entity target;
+Vector3 destination;
+Action currentTask
+List<task> nexTasks;
+Predicate TaskIsDone;
+
+private void Update()
+{
+	if (taskIsDone())
+		fetchNewTask();
+	exeCurrentTask();
+}
+							</code>
+						</pre>
+				</div>
+				<figure >
+					<img src="./ressources/queue orders.gif" style="float: left;max-width: 50%;">
+					<img src="./ressources/newMining.gif" style="max-width: 50%;">
+					<figcaption>Queueing up tasks(left)</figcaption>
+					<figcaption>Workers choosing what ressource to extract based on number of workers on selected ressource(right)</figcaption>
+				</figure>
+				<br>
+				<p sqtyle="clear: both;">
+					This simple structures allows for complex behaviours to emmerge.
+					Lte's take for example the mining behaviours:
+					<ul>
+						<li>Go to the ressource.</li>
+						<li>Extract the ressource.</li>
+						<li>Bring it back to the base.</li>
+						<li>Repeat until the mineral field is empty.</li>
+					</ul>
+				</p>
+				<div class="code-box">
+					<pre>
+							<code id="code">
+private void Mine()
+{
+	ListOfTasks.Insert(GoToRessource);
+	ListOfTasks.Insert(MineRessource);
+	ListOfTasks.Insert(BringRessourceToBase);
+	ListOfTasks.Insert(Mine);
+}
+							</code>
+						</pre>
+				</div>
+				<p>
+					The main difficulty I encountered while implementing behaviours, is that the current target(as well as the targets stored in the list),<br>
+					can get detroyed in battle or disappear in the fog of war.<br>
+					Keeping the same example as before, if the ressource gets exhausted or the base destroyed, the worker should try to find another ressource or base.<br>
+					If this is not handled correctly, Unity will do what it does best: throw NullReferenceException Errors.<br>
+					Implmenting the solution to that problem is what slowed me down the most.<br>
+					This is what I would refactor if I had to continue working on the project today.<br>
+				</p>
+				<p>
+					Let's see what I did wrong back then and what I would do today.<br><br>
+					To avoid referencing destroyed or hidden targets, each entity has an OnDestroyed CustomEvent(a glorified List of Actions).<br>
+					Whenever an entity targets a peer, it adds an Action to the target's OnDestroyed CustomEvent.<br>
+					If the target dies, the event gets called and the entity can react correctly(delete the associated task, find another target, ...)<br>
+					So far, so good. Now let's image that the entity itself dies before the target does... nothing happens <strong>but</strong>, once the target dies,
+					it will Invoke the event and try to call a method of a destroyed entity and then, Unity does what it does best.<br>
+					To fix this, I added a list of every peer an entity has targeted.<br>
+					So that when the entity dies, it will unsubscribe from every CustomEvent it was listening to and then invoke its OnDestroy CustomEvent.<br>
+					So far, so good. But wait, there is more.<br>
+					Let's imagine now, that the player gives a direct order to the unit(a direct order clears the list of upcomming tasks and changes the current one).<br>
+					The entity now has to clear itself from all the events it was listening to and clear it's OnDestroy CustomEvent.<br>
+					Having to handle these lists every time the entity changes state made the solution proune to errors, hard to debug and more complicated than necessary.<br>
+				</p>
+				<p>
+					What I should have done instead, was to simply check, OnUpdate, if any of the targets has disappeared or died, if so, react accordingly.<br>
+					That's it! I know it sounds brute force(and it is) but an entity would never have more than 4 or 5 targets at the same time.<br>
+					Given that there are at worst, 400 units in the game, this gives us in the worst case scenario 2000 checks to performs which is actually not that much for the computer.<br>
+				</p>
+			</article>
+			<h3>Fog of war</h3>
+			<article>
+				<img src="./ressources/fogOfWarSolo.gif" style="width: 40%; float: left; margin-right: 1%;">
+				<h4>Objectif</h4>
+				<p>
+					Suprisingly enough, fog of war systems are not a very well documented.<br>
+					There are some tutorials, but they don't give an ideal solution for RTSs.<br>
+					Before I explain how implemented this functionality,<br>let me clarify what I was trying to do.<br>
+					The fog of war darkens the part of the maps that are not in sight by ally entities.<br>
+					It also darkens (a little bit less) the parts that have already been visited but that are not <strong><i>currently</i></strong> in sight.<br>
+					It also hides enemy entities that are not in sight of allies, but this farily easy to implement,
+					we'll only focus on the after effect part of the fog.<br>
+					Here is how I did it.<br>
+				</p>
+			</article>
+			<article>
+				<h4>implementation</h4>
+				<p style="margin-bottom: 2%;">The main object in this implementation is a renderTexture containing the informations relative to the fog.</p>
+				<img src="./ressources/redChannel.PNG" alt="redChannel" style="width: 25%; float: left;">
+				<img src="./ressources/green.PNG" alt="greenChannel" style="width: 25%; float: left;">
+				<img src="./ressources/blue.PNG" alt="blueChannel" style="width: 25%; float: left;">
+				<img src="./ressources/fogRender.PNG" alt="fogRender" style="width: 25%; float: left;">
+				<p style="clear: both;">
+					Each channel holds a different type of info:
+					<ul>
+						<li>The red channel holds the <span style="color:rgb(255, 42, 42)">height of the terrain</span> (<i>a unit can see the areas in its sight that are below or at the same height</i>).</li>
+						<li>The green holds the area that has <span style="color:rgb(78, 255, 42)">been seen before</span>.</li>
+						<li>The blue channel holds the area that has <span style="color:rgb(42, 141, 255)">ally sights</span>.</li>
+					</ul>
+					Here is the <strong><span style="text-decoration: underline;">pseudo code</span></strong> of how the texture gets updated:<br>
+					<div class="code-box">
+						<pre>
+								<code id="code">
+<span style="color:rgb(78, 255, 42);">struct</span>  viewPoint
+{
+	<span style="color:rgb(78, 255, 42);">vector2</span> positon;
+	<span style="color:rgb(78, 255, 42);">float</span> viewRadius;
+	<span style="color:rgb(78, 255, 42);">float</span> height;
+}
+
+//code for the CPU
+<span style="color:rgb(78, 255, 42);">void</span> updateFogTex(<span style="color:rgb(78, 255, 42);">viewPoint</span>[] viewPoints, <span style="color:rgb(78, 255, 42);">RenderTexture</span>  fogTex)
+{
+//buffer that gets passed to the compute shader
+<span style="color:rgb(78, 255, 42);">ComputeBuffer</span> viewPointsBuffer = new ComputeBuffer(viewPoints.Length, sizeof(viewPoint));
+
+	<span style="color:rgb(236, 252, 18);">for</span> (<span style="color:rgb(78, 255, 42);">int</span> i = 0; i < viewPoints.Length; i++)
+		viewPointsBuffer[i] = viewPoints[i];
+	fog.clearVlueChannel();
+	updateFog(viewPointsBuffer, fog);
+	viewPointsBuffer.Free();//yes, you need to free computeBuffers
+}
+
+//code for GPU, gets run foreach viewPoint at the same time
+<span style="color:rgb(78, 255, 42);">computeShader</span> updateFog(viewPoint vp, RenderTexture fog)
+{
+//creates a ray from the position of the viewPoint to the edge of the viewRange
+	<span style="color:rgb(236, 252, 18);">foreach</span> (<span style="color:rgb(78, 255, 42);">Vector2</span> dest in poorlyImplemented_DDA_Circle(vp.viewRadius, vp.position))
+	{
+		<span style="color:rgb(78, 255, 42);">Vector2</span>[] UVsAlongRay = poorlyImplemented_DDA_Ray(vp.position, dest);
+		<span style="color:rgb(78, 255, 42);">int</span> i = 0;
+		//check if the view is not beeing blocked by a wall
+		<span style="color:rgb(236, 252, 18);">while</span> (i < UVsAlongRay.Length && fog[UVsAlongRay[i]].r <= vp.height)
+		{
+			fog[UVsAlongRay[i]].g = 1;
+			fog[UVsAlongRay[i]].b = 1;
+			i++;
+		}
+	}
+}
+								</code>
+							</pre>
+					</div>
+					The biggest problem of this implementation was performance.<br>
+					The issue was that every instance of the GPU code had to perform the DDA_ray and DDA_circle to know what pixel to read-write.<br>
+					To fix this, the the DDA ray and circle results are pre_computed as offsets by the CPU at startup.<br>
+					The offsets are then applied to the position of the viewPoint By the GPU, to know what pixel to read-write.<br>
+					And now 400 units(wich is already more than the maximum in SC2), even with the large radii, can be update the the fog at 30Hz while keeping the game at 70fps!<br>
+					Even though the code is a bit messy, I'm pretty proud of that little trick.<br>
+					This is somewhat of a wild claim so let me show you a little gif.
+				</p>
+				<img src="./ressources/fogOfWarGroup.gif" alt="groupFogOfWar" style="width: 60%;display: block;margin-left: auto;margin-right: auto;">
+				<figcaption style="text-align: center;">Note that the color shifts are due to the gif compression.</figcaption>
+				<p>
+				  Once the texture contains all the needed informations, it's time to actually render the fog.
+				  The first step is to create an albedo/alpha texture based on the fogTexture.
+				  The color is fixed, only the alpha changes depending on the state of the fog:
+				  <ul>
+				      <li>never seen = almost opaque</li>
+				      <li>seen before = little less opaque</li>
+				      <li>currently being seen = transparent</li>
+				  </ul>
+				  Then, the texture gets applied to the frame during postprocessing.<br>
+				  Thanks to this <a href="https://www.youtube.com/watch?v=OKoNp2RqE9A&t=20s" target="_blank">tutorial</a> on how to get world coordonates from the camera depth buffer,<br>
+				  I simply need to get the x and z coordonates read from the read pixel of the albedo texture and voilà!<br>
+				  (It was so much easier said than done️️)
+				</p>
+			</article>
+			<article>
+				<h3>UI</h3>
+				<p>
+					To make things clear, I hate UI.<br>
+					But it is a very important aspect of gameDev, so I try to live with it.<br>
+					Here is a comparaison with the StarCraft2 UI and mine, it was poorly implemented but at least it worked🤷.<br>
+					
+				</p>
+				<img src="./ressources/starcraft UI.gif"style="border-radius: 2%;width: 100%; display: block; margin-left: auto; margin-right: auto;">
+				<img src="./ressources/my UI.gif"style="border-radius: 2%; width: 100%; display: block; margin-left: auto; margin-right: auto;">
+			</article>
+			<article>
+				<h3>multiplayer</h3>
+				<p>
+					Implementing multiplayer is actually not as complicated as I thought iit would be(when using Photon2).<br>
+					But it does require to be considered from the beiginning(wich is exactly what I didn't do).<br>
+					While i did manage to make the multiplayer work(I could creat/join a lobby and interact with enemmy units), I didn't test it properly.<br>
+					So unfortunatly, I don't have a lot to show on that part of the project🤷.<br>
+				</p>
+			</article>
+		</section>
+		<section>
+			<h2>Real size procedural planet LOD(2020)</h2>
+			<article>
+				<h3>Objectif</h3>
+				<p>
+					The goal of the project was to create real size planets that could be visited from space all the way down to the ground without loading times.
+					The most common process to generate the mesh is as follows:<br>
+					<ul>
+						<li>
+							Make a qudTree on each side of a cube(<i>figure1</i>).<br>
+							Every quad that is close enough to the player can spawn quad childrens and repeat the recursion until the quads satisfy a certain size given its distance to the player.
+							Basically the closer the player the smaller the leaves.<br>
+						</li>
+						<li>Fill in the quads with a grid mesh of fixed vertices count, resized/roatated/translated to the fit in the quad(<i>figure2</i>).</li>
+						 <li>set the vertices equal to their normal multiplied by some noise(<i>figure3</i>).</li>
+					</ul>
+					<img src="./ressources/quadTree.PNG" style="width: 34%; float: left;">
+					<img src="./ressources/quadTreeWithVertices.PNG" style="width: 33%; float: left;">
+					<img src="./ressources/inflated.PNG" style="width: 33%; float: left;">
+					<figcaption style="clear: both;">the green point is the view point it hqs a radius of 200 meters</figcaption>
+				</p>
+				<p style="clear: both;">
+				The biggest problem with this method is that it generates seams between leaves of different level of recursion.<br>
+				<img src="./ressources/seams.PNG" style="display: block; margin-left: auto; margin-right: auto; margin-top: 10px;">
+				To fix this, I created links btetween adjacent quades/nodes so the leaves could see if there was a differences of recursion with their neighbours.
+				If so,  the leaf with the highest recursion level, would have to lerp some of its side vertices to match the vertices of the neighbour.<br>
+				This solution is terrible though, because it makes the data structure way more complex than it needs to be and more proune to error.<br>
+				<br>
+				The second problem, is that the normals where calculated using the RecalculateNormals function.<br>
+				Wich caused normal seams in between leaves(even if they had the same level of recursion)<br>
+				To fix this I had to "merge" normals together wich added even more complexity and errors.<br>
+				<br>
+				The last and most important problem, was that the all the processing was done on a single thread!!!<br>
+				It should've been ran on the GPU, but at the time I didn't knew how to use shaders.<br>
+				</p>
+				<img src="./ressources/flybyPOV.gif" style="width: 50%; float: left;">
+				<img src="./ressources/flybyTHirdPerson.gif" style="width: 50%; float: left;">
+				<p>
+					As you can see, there are freezes this is when knew leaves are being created.<br>
+					Note however that the view Point is moving at 450m/s which is already more thatn the speed of sound(343m/s).<br>
+				</p>
+			</article>
+		</section>
+		<section>
+		<article>
+		<h2>NFT project</h2>
+		<p>
+		Here is a procedural model that changes given the NFT traits of the player.<br>
+		<img src="./ressources/traits.gif">
+		</p>
+		</article>
+		</section>
+		<section>
+            <article>
+                <h2>robot</h2>
+                <p>
+                    Here is a robot I made in 2019.<br>
+                    The parts are designed on Onshape and 3Dprinted on my ender3.<br>
+                    <a id="robot"  style="scroll-behavior: smooth;"><img src="./ressources/robot.gif" style="max-width: 50%; margin-left: auto; margin-right: auto; margin-top: 10px;"></a>
+                </p>
+            </article>
+		</section>
     </div>
 </body>
 </html>
