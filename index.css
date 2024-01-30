@@ -154,14 +154,14 @@ html {
 	padding: 5px;
   }
   
-  /* Clearfix (clear floats) */
-  .row::after {
+/* Clearfix (clear floats) */
+.row::after {
 	content: "";
 	clear: both;
 	display: table;
   }
 
-  .content-container {
+.content-container {
     /* Set the desired width for your text and image */
     width: 60%;
     margin: auto; /* Centers the container */
